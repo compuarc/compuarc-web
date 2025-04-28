@@ -20,7 +20,7 @@ Features:
 - ✅ Sitemap support
 - ✅ RSS Feed support
 - ✅ Markdown & MDX support
-
+- hola mundo
 ## 🚀 Project Structure
 
 Inside of your Astro project, you'll see the following folders and files:
