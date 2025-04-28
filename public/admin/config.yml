@@ -1,0 +1,128 @@
+# --- Configuración Backend ---
+# Conexión con el repositorio Git donde se guarda el contenido y código
+backend:
+  name: github # Proveedor Git (puede ser gitlab, bitbucket, etc.)
+  repo: compuarc/website # ¡¡VERIFICAR!! Tu usuario_o_org/nombre_del_repo
+  branch: main # Rama principal donde va el contenido publicado
+  # --- Flujo Editorial (Opcional Avanzado) ---
+  # Habilita estados de Draft -> In Review -> Ready dentro de Decap CMS.
+  # En GitHub, esto generalmente funciona creando Pull Requests para las revisiones.
+  # Requiere configuración adicional en GitHub y potencialmente en Cloudflare si quieres previews por PR.
+  publish_mode: editorial_workflow
+
+# --- Configuración de Media (Imágenes, Archivos) ---
+# Dónde se guardan los archivos subidos desde Decap CMS
+media_folder: "public/assets/images/uploads" # Carpeta física (relativa a la raíz del repo Git) - ¡Asegúrate de crearla si no existe!
+# Cómo se accede a esos archivos desde la web pública
+public_folder: "/assets/images/uploads"
+# Configuración de la librería de medios en la interfaz de Decap
+media_library:
+  name: upload # Usar la librería integrada de subida simple
+  config:
+    multiple: false # Permitir seleccionar múltiples archivos a la vez
+
+# --- Definición de Colecciones de Contenido ---
+# Cada 'collection' representa un tipo de contenido que quieres gestionar
+collections:
+
+  # --- Colección para Autores (Ejemplo de Relación) ---
+  # Útil si tienes varios autores o quieres mostrar su info
+  - name: "authors" # Identificador interno
+    label: "Autores" # Nombre en la UI
+    label_singular: "Autor"
+    folder: "src/content/authors" # ¡¡VERIFICAR RUTA!! Carpeta para guardar datos de autores (ej. en .md) - ¡Necesitarás crearla!
+    create: true
+    slug: "{{slug}}" # Nombre de archivo basado en el campo 'name'
+    identifier_field: "name" # Campo que identifica a cada autor
+    fields:
+      - { label: "Nombre Completo", name: "name", widget: "string" }
+      - { label: "Foto (URL o subida)", name: "photo", widget: "image", required: false }
+      - { label: "Biografía Corta", name: "bio", widget: "text", required: false }
+      - { label: "Twitter Handle (sin @)", name: "twitter", widget: "string", required: false }
+
+  # --- Colección Principal: Posts del Blog ---
+  - name: "blog"
+    label: "Entradas del Blog"
+    label_singular: "Entrada del Blog"
+    folder: "src/content/blog" # ¡¡RUTA CRÍTICA!! Verifica que coincide con tu estructura Astro
+    create: true
+    slug: "{{slug}}" # Nombre archivo basado en título (sin fecha)
+    # --- Configuración UI para la lista de posts en Decap ---
+    summary: "{{title}} | Autor: {{fields.author}} | Fecha: {{pubDate}}" # Cómo se ve cada ítem en la lista (ajustar 'author' si cambia el value_field)
+    sortable_fields: ['pubDate', 'title', 'author', 'status'] # Campos por los que se puede ordenar la lista
+    view_groups: # Agrupar en la UI (ej. por autor o estado)
+      - { label: 'Autor', field: 'author' }
+      - { label: 'Estado (Workflow)', field: 'status'}
+    # --- Campos del Editor para Cada Post ---
+    fields:
+      # --- Información Fundamental ---
+      - { label: "Título Principal", name: "title", widget: "string", hint: "El H1 y base para el slug." }
+      - { label: "Fecha de Publicación", name: "pubDate", widget: "datetime", date_format: "YYYY-MM-DD", time_format: "HH:mm", format: "YYYY-MM-DD HH:mm", hint: "Fecha efectiva de publicación (para ordenar y mostrar)." }
+      - { label: "Autor", name: "author", widget: "relation", collection: "authors", search_fields: ["name"], value_field: "name", display_fields: ["name"], required: true, hint: "Selecciona un autor de la colección 'Autores'." } # Cambiado value_field a 'name' por simplicidad
+      - { label: "Imagen Principal (Hero)", name: "heroImage", widget: "image", required: false, hint: "Sube la imagen destacada." }
+      - { label: "Alt Text Imagen Principal", name: "heroAlt", widget: "string", required: true, hint: "Descripción CORTA y PRECISA de la imagen para SEO/Accesibilidad." } # Requerido!
+      - { label: "Tiempo Estimado de Lectura (min)", name: "readTime", widget: "number", value_type: "int", min: 1, required: false, hint: "Opcional: calcular automáticamente o poner manualmente."}
+
+      # --- Contenido ---
+      - { label: "Extracto / Resumen Corto", name: "excerpt", widget: "text", required: false, hint: "Un resumen breve para mostrar en listados." }
+      - { label: "Cuerpo del Post (Markdown)", name: "body", widget: "markdown", hint: "Contenido principal. Usa #, ##, ### para encabezados." }
+
+      # --- Organización ---
+      - { label: "Etiquetas (Tags)", name: "tags", widget: "list", required: false, hint: "Lista de tags relevantes (uno por línea o separados por coma)." }
+      - { label: "Categoría Principal", name: "category", widget: "string", required: false }
+      - { label: "¿Es Post Destacado?", name: "featured", widget: "boolean", default: false, required: false, hint: "Marcar para destacarlo (requiere lógica en plantilla Astro)." }
+
+      # --- SEO y Metadatos Avanzados (Agrupados) ---
+      - label: "Optimización SEO y Redes Sociales"
+        name: "seo"
+        widget: "object"
+        collapsed: true # Empieza colapsado en la UI
+        hint: "Configuraciones para buscadores y cómo se ve al compartir."
+        fields:
+          - { label: "Título SEO (<title>)", name: "title", widget: "string", required: false, hint: "Opcional (~60 chars). Si vacío, usa Título Principal." }
+          - { label: "Meta Descripción", name: "description", widget: "string", hint: "Texto corto para Google/redes (~155 caracteres)." }
+          - { label: "Keywords", name: "keywords", widget: "string", required: false, hint: "Palabras clave separadas por coma (uso limitado)." }
+          - { label: "URL Canónica", name: "canonicalURL", widget: "string", required: false, hint: "URL original si es contenido duplicado." }
+          - { label: "Meta Robots", name: "robots", widget: "string", required: false, hint: "Ej: noindex, nofollow. Vacío para permitir." }
+          - { label: "Tipo Schema.org", name: "schemaType", widget: "select", options: ["BlogPosting", "Article", "NewsArticle", "Review"], default: "BlogPosting", required: false }
+          # Open Graph & Twitter Cards
+          - { label: "Imagen Social (OG/Twitter)", name: "socialImage", widget: "image", required: false, hint: "Imagen específica para compartir (1200x630px). Si vacía, usa Hero Image." }
+          - { label: "Tipo Open Graph", name: "ogType", widget: "select", options: ["article", "website"], default: "article", required: false }
+          - { label: "Tipo Twitter Card", name: "twitterCard", widget: "select", options: ["summary", "summary_large_image"], default: "summary_large_image", required: false }
+          # Nota: Título/Descripción OG/Twitter suelen generarse desde los campos SEO principales en Astro.
+
+      # --- Relaciones y Estado (Avanzado) ---
+      - label: "Posts Relacionados (Selección Manual)"
+        name: "relatedPosts"
+        widget: "relation"
+        collection: "blog" # Se relaciona consigo misma
+        search_fields: ["title", "author"]
+        value_field: "{{slug}}" # Guarda el slug del post relacionado para usar en plantilla Astro
+        display_fields: ["title", " ({{author}})", " - {{pubDate}}"] # Muestra más info en la UI de Decap
+        multiple: true
+        required: false
+        min: 0
+        max: 5 # Limitar a 5, por ejemplo
+        hint: "Selecciona posts relacionados. Tu plantilla Astro necesita usar estos slugs."
+      - { label: "Estado (Workflow)", name: "status", widget: "hidden", default: "draft", hint: "Gestionado por el Flujo Editorial." } # Oculto, gestionado por Decap
+
+  # --- Colección para Páginas Estáticas (Ejemplo) ---
+  - name: "pages"
+    label: "Páginas Estáticas"
+    label_singular: "Página"
+    folder: "src/content/pages" # ¡¡VERIFICAR RUTA!! O quizás src/pages/?
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Título de Página", name: "title", widget: "string" }
+      - { label: "Cuerpo (Markdown)", name: "body", widget: "markdown" }
+      - { label: "Estado (Workflow)", name: "status", widget: "hidden", default: "draft" }
+      # Añadir widget 'seo' object aquí si necesitas control granular por página
+      - label: "Optimización SEO"
+        name: "seo"
+        widget: "object"
+        collapsed: true
+        fields:
+          - { label: "Título SEO (<title>)", name: "title", widget: "string", required: false }
+          - { label: "Meta Descripción", name: "description", widget: "string" }
+          - { label: "Meta Robots", name: "robots", widget: "string", required: false }
