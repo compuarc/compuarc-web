@@ -9,7 +9,7 @@ import compressor from 'astro-compressor'; // Para optimizar salida (opcional)
 // https://astro.build/config
 export default defineConfig({
   
-  // ¡IMPORTANTE! Define la URL final de tu sitio para rutas correctas y sitemap
+  //-es  ¡IMPORTANTE! Define la URL final de tu sitio para rutas correctas y sitemap
   site: 'https://website-2ye.pages.dev', 
   
   // ¡IMPORTANTE! Fuerza la salida 100% estática (SSG)

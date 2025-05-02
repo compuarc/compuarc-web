@@ -1,5 +1,5 @@
 # --- Configuración Backend ---
-# Conexión con el repositorio Git donde se guarda el contenido y código
+#La Conexión con el repositorio Git donde se guarda el contenido y código
 backend:
   name: github # Proveedor Git (puede ser gitlab, bitbucket, etc.)
   repo: compuarc/website # ¡¡VERIFICAR!! Tu usuario_o_org/nombre_del_repo
