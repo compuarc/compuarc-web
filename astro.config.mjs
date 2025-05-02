@@ -10,7 +10,7 @@ import compressor from 'astro-compressor'; // Para optimizar salida (opcional)
 export default defineConfig({
   
   // ¡IMPORTANTE! Define la URL final de tu sitio para rutas correctas y sitemap
-  site: 'https://compuarc-web.pages.dev', 
+  site: 'https://website-2ye.pages.dev', 
   
   // ¡IMPORTANTE! Fuerza la salida 100% estática (SSG)
   output: 'static', 
